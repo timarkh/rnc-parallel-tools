@@ -145,7 +145,7 @@ def parsed2xml(fnameInXml, fnameInParsed, fnameOut):
     line separation is deduced from the \r character in the stagger-analyzed
     file, so Windows newlines must be used in the stagger input file.
     """
-    print(fnameInXml)
+    # print(fnameInXml)
     fParsed = open(fnameInParsed, 'r', encoding='utf-8', newline='')
     text = fParsed.read()
     fParsed.close()
@@ -168,9 +168,11 @@ def parsed2xml(fnameInXml, fnameInParsed, fnameOut):
         sentences[iSent] += build_ana(token, lemma, pos1, gramm, curAddr, prevAddr)
         prevAddr = curAddr + len(token)
     sentences = [s.strip() for s in sentences]
-    print(sentences)
+    if len(sentences[-1]) <= 0:
+        sentences = sentences[:-1]
+    # print(sentences)
 
-    #fOut = open(fnameOut, 'w', encoding='utf-8')
+    fOut = open(fnameOut, 'w', encoding='utf-8')
     paraId = -1
     iSe = 0
     lang = 'ru'
@@ -182,8 +184,8 @@ def parsed2xml(fnameInXml, fnameInParsed, fnameOut):
     fXml.close()
     for line in xmlText:
         line += '\n'
-        if re.search('^ *</?(body|head|html)> *\n', line) is not None:
-            #fOut.write(line)
+        if re.search('^ *</?(body|head|html)> *\n|^[ \n]*$', line) is not None:
+            fOut.write(line)
             continue
         if line.strip().startswith('<weight'):
             continue
@@ -196,58 +198,40 @@ def parsed2xml(fnameInXml, fnameInParsed, fnameOut):
             mPara = re.search('^([ \t]*<para id=")([^"]+)(.*)', line, flags=re.DOTALL)
             if mPara is not None:
                 paraId += 1
-                #fOut.write(mPara.group(1) + str(paraId) + mPara.group(3))
-            #else:
-                #fOut.write(line)
+                fOut.write(mPara.group(1) + str(paraId) + mPara.group(3))
+            else:
+                fOut.write(line)
             continue
         lineSrc = m.group(2)
-        lineOut = m.group(1) + sentences[iSe] + m.group(3)
+        if iSe >= len(sentences):
+            print('Error: senetce mismatch. Paragraph ID: ' + str(paraId))
+        else:
+            lineOut = m.group(1) + sentences[iSe] + m.group(3)
+            fOut.write(lineOut)
         iSe += 1
-        print(paraId, lineSrc)
-        print(lineOut)
-        #fOut.write(lineOut)
-    #fOut.close()
+        # print(paraId, lineSrc)
+        # print(lineOut)
+    fOut.close()
 
 
 if __name__ == '__main__':
     nFiles2process = 0
+    fnamesIn = ''
     for root, dirs, files in os.walk('./texts_2020/'):
         for fname in files:
             if not fname.endswith('.xml') or fname.endswith('analyzed.xml'):
                 continue
             fnameFull = os.path.join(root, fname)
             print(fnameFull)
-            xml2txt(fnameFull,
-                    os.path.join(root, fname[:-3] + 'txt'))
-            if not os.path.exists(os.path.join(root, fname[:-4]) + '-out.txt'):
-                print('java -jar stagger/stagger.jar -modelfile swedish.bin -tag '
-                      + os.path.abspath(os.path.join(root, fname[:-4])) + '.txt >'
-                      + os.path.abspath(os.path.join(root, fname[:-4])) + '-out.txt')
-                nFiles2process += 1
-            # nFiles2process += 1
-            # parsed2xml(fnameFull,
-            #            fnameFull[:-4] + '-out.txt',
-            #            os.path.join('texts_2019.02/texts_2019.02_processed',
-            #                         fname[:-4] + '-analyzed.xml'))
+            # xml2txt(fnameFull,
+            #         os.path.join(root, fname[:-3] + 'txt'))
+            # if not os.path.exists(os.path.join(root, fname[:-3]) + 'txt.conll'):
+            #     fnamesIn += os.path.abspath(os.path.join(root, fname[:-4])) + '.txt '
+            #     nFiles2process += 1
+            nFiles2process += 1
+            parsed2xml(fnameFull,
+                       fnameFull[:-3] + 'txt.conll',
+                       os.path.join('texts_2020/texts_2020_processed',
+                                    fname[:-4] + '-analyzed.xml'))
     print('Files to process:', nFiles2process)
-    #xml2txt(u'text_multi/chajka.xml', u'text_multi/chajka.txt')
-    #xml2txt(u'text_multi/sad.xml', u'text_multi/sad.txt')
-    #xml2txt(u'text_multi/rodarummet.xml', u'text_multi/rodarummet.txt')
-    #xml2txt(u'text_multi/veschi.xml', u'text_multi/veschi.txt')
-    # parsed2xml(u'text_multi/3sestry.xml', u'text_multi/3sestry-out.txt',
-    #            u'text_multi/3sestry-analyzed.xml')
-    # parsed2xml(u'text_multi/vania.xml', u'text_multi/vania-out.txt',
-    #            u'text_multi/vania-analyzed.xml')
-##    parsed2xml(u'text_multi/rodarummet.xml', u'text_multi/rodarummet-out.txt',
-##               u'text_multi/rodarummet-analyzed.xml')
-##    parsed2xml(u'text_multi/chajka.xml', u'text_multi/chajka-out.txt',
-##               u'text_multi/chajka-analyzed.xml')
-    # parsed2xml(u'text_multi/sad.xml', u'text_multi/sad-out.txt',
-    #            u'text_multi/sad-analyzed.xml')
-    # json2xml(u'texts/kompromiss.xml', u'texts/kompromiss-analyzed.json', u'texts/kompromiss-analyzed.xml')
-    # for fname in os.listdir(u'texts'):
-    #     if not fname.endswith(u'.xml') or fname.endswith(u'analyzed.xml'):
-    #         continue
-    #     fname = u'texts/' + fname
-    #     print fname
-    #     json2xml(fname, fname[:-4] + u'-analyzed.json', fname[:-4] + u'-analyzed.xml')
+    # print('java -jar stagger/stagger.jar -modelfile swedish.bin -tag ' + fnamesIn)
