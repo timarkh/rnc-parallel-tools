@@ -4,8 +4,8 @@ import json
 from lxml import etree
 from xml.sax.saxutils import escape, unescape
 
-reWords = re.compile('((?:<[^<>\r\n]+>)*)(?:^|\\b)([^<>]+?)(?:\\b|$)((?:</[^<>\r\n]+>)*)', flags= re.DOTALL)
-reWordsSimple = re.compile('(?:^|\\b)[^<>]+?(?:\\b|$)', flags= re.DOTALL)
+reWords = re.compile('((?:<[^<>\r\n]+>)*)(?:^|\\b)([^<>]+?)(?:\\b|$)((?:</[^<>\r\n]+>)*)', flags=re.DOTALL)
+reWordsSimple = re.compile('(?:^|\\b)[^<>]+?(?:\\b|$)', flags=re.DOTALL)
 
 
 def xml2json(fnameIn, fnameOut):
@@ -66,7 +66,7 @@ def json2xml(fnameInXml, fnameInJson, fnameOut):
                (iWord == 0 and jsonSentences[iSe]['words'][iWord]['text'] != wordStripped):
                 lineOut += word[0] + word[1] + word[2]
                 continue
-            # print(word, jsonSentences[iSe][u'words'][iWord])
+            # print(word, jsonSentences[iSe]['words'][iWord])
             anas = jsonSentences[iSe]['words'][iWord]['analysis']
             iWord += 1
             if len(anas) <= 0:
@@ -87,13 +87,28 @@ def json2xml(fnameInXml, fnameInJson, fnameOut):
     fOut.close()
 
 
-if __name__ == u'__main__':
-    #xml2json(u'texts/keisrihull.xml', u'texts/keisrihull.json')
-    json2xml(u'texts/keisrihull.xml', u'texts/keisrihull-analyzed.json', u'texts/keisrihull-analyzed.xml')
-    #json2xml(u'texts/kompromiss.xml', u'texts/kompromiss-analyzed.json', u'texts/kompromiss-analyzed.xml')
-    for fname in os.listdir('texts'):
-        if not fname.endswith('.xml') or fname.endswith('analyzed.xml'):
-            continue
-        fname = 'texts/' + fname
-        print(fname)
-        json2xml(fname, fname[:-4] + '-analyzed.json', fname[:-4] + '-analyzed.xml')
+if __name__ == '__main__':
+    nFiles2process = 0
+    fnamesIn = ''
+    for root, dirs, files in os.walk('./texts/estonian/'):
+        for fname in files:
+            if not fname.endswith('.xml') or fname.endswith('analyzed.xml'):
+                continue
+            fnameFull = os.path.join(root, fname)
+            print(fnameFull)
+            xml2json(fnameFull,
+                     os.path.join(root, fname[:-3] + 'json'))
+            if not os.path.exists(os.path.join(root, fname[:-4]) + '-analyzed.json'):
+                fnamesIn += os.path.abspath(os.path.join(root, fname[:-3])) + 'json '
+                nFiles2process += 1
+    print('Files to process:', nFiles2process)
+    print(fnamesIn)
+    # TODO: Call vabamorf directly
+    x = input('Press any key after tagging is complete...')
+    for root, dirs, files in os.walk('./texts/estonian/'):
+        for fname in files:
+            if not fname.endswith('.xml') or fname.endswith('analyzed.xml'):
+                continue
+            fnameFull = os.path.join(root, fname)
+            print(fnameFull)
+            json2xml(fnameFull, fname[:-4] + '-analyzed.json', fname[:-4] + '-analyzed.xml')

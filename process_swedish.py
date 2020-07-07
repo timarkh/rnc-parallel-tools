@@ -131,7 +131,6 @@ if __name__ == '__main__':
             if not os.path.exists(os.path.join(root, fname[:-3]) + 'txt.conll'):
                 fnamesIn += os.path.abspath(os.path.join(root, fname[:-4])) + '.txt '
                 nFiles2process += 1
-            nFiles2process += 1
     print('Files to process:', nFiles2process)
     print('java -jar stagger/stagger.jar -modelfile swedish.bin -tag ' + fnamesIn)
     # TODO: Call stagger directly
