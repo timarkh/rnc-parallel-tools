@@ -1,0 +1,10 @@
+__pycache__
+stagger/**
+pyvabamorf/**
+**.pyc
+**.idea/**
+**.rar
+**.zip
+**.bin
+**.bz2
+**.7z
