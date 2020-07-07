@@ -42,9 +42,9 @@ def json2xml(fnameInXml, fnameInJson, fnameOut):
         if 'lang="e' in line:
             lang = 'ee'
         m = re.search('([ \t]*<se +lang="e[^<>]*>|^)([^\r\n]*?)'
-                      '(</se>[ \t]*\r?\n|\r?\n)', line)
+                      '(</se>[ \t]*\n|\n)', line, flags=re.DOTALL)
         if m is None or lang == 'ru' or '<para' in m.group(2) or '</para' in m.group(2):
-            mPara = re.search('^([ \t]*<para id=")([^"]+)(.*)', line)
+            mPara = re.search('^([ \t]*<para id=")([^"]+)(.*)', line, flags=re.DOTALL)
             if mPara is not None:
                 paraId += 1
                 fOut.write(mPara.group(1) + str(paraId) + mPara.group(3))
@@ -89,8 +89,8 @@ def json2xml(fnameInXml, fnameInJson, fnameOut):
 
 if __name__ == '__main__':
     nFiles2process = 0
-    fnamesIn = ''
-    for root, dirs, files in os.walk('./texts/estonian/'):
+    fnamesIn = []
+    for root, dirs, files in os.walk('texts/estonian/'):
         for fname in files:
             if not fname.endswith('.xml') or fname.endswith('analyzed.xml'):
                 continue
@@ -99,16 +99,22 @@ if __name__ == '__main__':
             xml2json(fnameFull,
                      os.path.join(root, fname[:-3] + 'json'))
             if not os.path.exists(os.path.join(root, fname[:-4]) + '-analyzed.json'):
-                fnamesIn += os.path.abspath(os.path.join(root, fname[:-3])) + 'json '
+                fnamesIn.append(os.path.join(root, fname[:-3]) + 'json')
                 nFiles2process += 1
     print('Files to process:', nFiles2process)
     print(fnamesIn)
+    print('cd vabamorf-master/apps/cmdline/project/unix/')
+    for fnameIn in fnamesIn:
+        print('./etana analyze -in ../../../../' + fnameIn
+              + ' -out ../../../../' + fnameIn[:-5] + '-analyzed.json')
     # TODO: Call vabamorf directly
-    x = input('Press any key after tagging is complete...')
+    x = input('Press Enter after tagging is complete...')
     for root, dirs, files in os.walk('./texts/estonian/'):
         for fname in files:
             if not fname.endswith('.xml') or fname.endswith('analyzed.xml'):
                 continue
             fnameFull = os.path.join(root, fname)
             print(fnameFull)
-            json2xml(fnameFull, fname[:-4] + '-analyzed.json', fname[:-4] + '-analyzed.xml')
+            json2xml(fnameFull,
+                     fnameFull[:-4] + '-analyzed.json',
+                     fnameFull[:-4] + '-analyzed.xml')

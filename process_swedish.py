@@ -134,7 +134,7 @@ if __name__ == '__main__':
     print('Files to process:', nFiles2process)
     print('java -jar stagger/stagger.jar -modelfile swedish.bin -tag ' + fnamesIn)
     # TODO: Call stagger directly
-    x = input('Press any key after tagging is complete...')
+    x = input('Press Enter after tagging is complete...')
     for root, dirs, files in os.walk('./texts_2020/'):
         for fname in files:
             if not fname.endswith('.xml') or fname.endswith('analyzed.xml'):
